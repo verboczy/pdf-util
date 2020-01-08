@@ -6,5 +6,5 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class Arguments {
-    protected String source;
+    protected final String source;
 }

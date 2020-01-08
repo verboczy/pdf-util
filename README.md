@@ -1,5 +1,5 @@
 # pdf-util
-A tool for modifying PDF files easily.
+A tool for handling and modifying PDF files easily.
 
 ## Use cases
 + Delete pages from document. _(TODO)_
@@ -7,3 +7,5 @@ A tool for modifying PDF files easily.
 + Delete attachment from document. _(TODO)_
 + Merge documents. _(TODO)_
 + Split document. _(TODO)_ 
++ Extract pages from document. _(TODO)_
++ Bookmark pages in document. _(TODO)_
