@@ -5,27 +5,30 @@ import dto.DeletePagesArguments;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.cli.*;
 
-import java.util.Arrays;
+import java.util.*;
+
 
 @Slf4j
 public class CommandLineArgumentHandler {
 
-    private Options createOptions() {
-        final Options options = new Options();
+    private Options options;
+
+    public CommandLineArgumentHandler() {
+        options = new Options();
 
         options.addOption("doc", "document", true, "The source document can be given here.");
 
-        options.addOption("d", "delete", true, "Deletes the given pages.");
+        final Option deleteOption = new Option("d", "delete", true, "Deletes the given pages.");
+        deleteOption.setArgs(Option.UNLIMITED_VALUES);
+        options.addOption(deleteOption);
         options.addOption("e", "extract", true, "Extracts the given pages.");
 
         options.addOption("h", "help", false, "prints this help");
 
-        return options;
+        log.trace("Options created.");
     }
 
-    public Arguments parse(final String[] args) {
-        final Options options = createOptions();
-
+    Arguments parse(final String[] args) {
         final CommandLineParser parser = new DefaultParser();
         final CommandLine cmd;
         try {
@@ -43,24 +46,50 @@ public class CommandLineArgumentHandler {
 
             final String doc = cmd.getOptionValue("doc");
 
-            // TODO - validate here!
-
             if (cmd.hasOption("d")) {
-                final String[] pagesToDelete = cmd.getOptionValues("d");
-                // TODO - convert args to integer list
-                DeletePagesArguments dpg = new DeletePagesArguments(doc, Arrays.asList(Integer.parseInt(pagesToDelete[0])));
-                return dpg;
+                final String[] pagesFromArgument = cmd.getOptionValues("d");
+                final List<Integer> pagesToDelete = getPagesFromArgument(pagesFromArgument);
+                return new DeletePagesArguments(doc, pagesToDelete);
             }
 
-            if (cmd.hasOption("e")) {
-
-            }
+//            if (cmd.hasOption("e")) {
+//
+//            }
         } catch (ParseException e) {
             e.printStackTrace();
         }
 
         return null;
 
+    }
+
+    List<Integer> getPagesFromArgument(String[] pages) {
+        List<Integer> result = new ArrayList<>();
+        try {
+            for (String page : pages) {
+                if (page.contains("-")) {
+                    final String[] morePageNumbers = page.split("-");
+                    int lowerBound = Integer.parseInt(morePageNumbers[0]);
+                    int upperBound = Integer.parseInt(morePageNumbers[1]);
+                    for (int i = upperBound; i >= lowerBound; i--) {
+                        result.add(i);
+                    }
+                } else {
+                    result.add(Integer.parseInt(page));
+                }
+            }
+        } catch (NumberFormatException n) {
+            log.error("There was an invalid character inside the arguments.");
+            log.trace(n.getMessage());
+            return Collections.emptyList();
+        }
+
+        // Remove duplicates
+        Set<Integer> integerSet = new HashSet<>(result);
+        result = new ArrayList<>(integerSet);
+        // Order the pages descending
+        result.sort((a, b) -> Integer.compare(b, a));
+        return result;
     }
 
     private void printHelp(final Options options) {

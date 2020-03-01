@@ -4,6 +4,7 @@ import dto.Arguments;
 import dto.DeletePagesArguments;
 import dto.ExtractPagesArguments;
 import javafx.util.Pair;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
 import org.apache.pdfbox.multipdf.Splitter;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -13,15 +14,24 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 public class BasicPdfService implements PdfService {
 
     @Override
     public void removePages(final DeletePagesArguments arguments) throws IOException {
+        log.info("Removing pages from document...");
         final PDDocument document = loadDocument(arguments);
 
-        document.removePage(0);
+        for (Integer pageNumber : arguments.getPageNumbers()) {
+            --pageNumber; // It indexes from 0, but the user does not.
+            log.trace("Removing page {} from document...", pageNumber);
+            document.removePage(pageNumber);
+            log.debug("Page {} has been removed from document.", pageNumber);
+        }
 
+        log.debug("All page has been removed from document. Saving document...");
         saveAndCloseDocument(document, arguments.getSource());
+        log.info("Successfully removed all desired page from document.");
     }
 
     @Override
@@ -66,8 +76,15 @@ public class BasicPdfService implements PdfService {
     }
 
     private PDDocument loadDocument(final Arguments arguments) throws IOException {
+        log.debug("Loading document [{}]", arguments.getSource());
         File file = new File(arguments.getSource());
-        return PDDocument.load(file);
+        try {
+            return PDDocument.load(file);
+        } catch (IOException e) {
+            log.error("Could not load file: {}", arguments.getSource());
+            log.trace(e.getLocalizedMessage());
+            throw e;
+        }
     }
 
     private void saveAndCloseDocument(final PDDocument document, final String fileName) throws IOException {
