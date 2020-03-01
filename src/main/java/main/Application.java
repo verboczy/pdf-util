@@ -1,7 +1,11 @@
 package main;
 
+import dto.Arguments;
+import dto.DeletePagesArguments;
 import dto.ExtractPagesArguments;
 import javafx.util.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import service.BasicPdfService;
 import service.PdfService;
 
@@ -10,8 +14,19 @@ import java.util.Arrays;
 
 public class Application {
 
+    private static final Logger log = LoggerFactory.getLogger(Application.class);
+
     public static void main(final String[] args) {
-        System.out.println("Hello world!");
+        log.info("Application started...");
+        CommandLineArgumentHandler commandLineArgumentHandler = new CommandLineArgumentHandler();
+        final Arguments arguments = commandLineArgumentHandler.parse(args);
+        if (arguments instanceof DeletePagesArguments) {
+            log.debug("Delete pages arguments");
+        } else if (arguments instanceof ExtractPagesArguments) {
+            log.debug("Extract pages arguments");
+        } else {
+            log.warn("Unknown arguments");
+        }
         PdfService basicPdfService = new BasicPdfService();
         try {
             //basicPdfService.removePages(new DeletePagesArguments("C:\\Users\\verboczy\\Desktop\\ssh.pdf", Arrays.asList(0, 1)));
